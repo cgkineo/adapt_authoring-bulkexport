@@ -1,0 +1,106 @@
+<script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="/css/adapt.css">
+<div class="inner">
+  <h1>Bulk export</h1>
+  <div class="buttons">
+    Select:
+    <button href="#" class="btn primary-hollow select" data-type="all">All</button>
+    <button href="#" class="btn primary-hollow select" data-type="none">None</button>
+    <button href="#" class="btn primary-hollow select" data-type="unexported">Unexported</button>
+    <button href="#" class="btn primary-hollow select" data-type="updated">Recently updated</button>
+  </div>
+  <div class="buttons">
+    <button href="#" class="btn secondary export">Export</button>
+  </div>
+  <div class="courses">
+    <div class="course header">
+      <div class="attribute">Include</div>
+      <div class="attribute">Course title</div>
+      <div class="attribute">Last updated</div>
+      <div class="attribute">Last exported</div>
+    </div>
+    {{#each courses}}
+      <div class="course" data-id="{{_id}}">
+        <div class="attribute check centre"><input type="checkbox" id="{{_id}}" name="{{_id}}"></div>
+        <div class="attribute title">{{title}}</div>
+        <div class="attribute updatedAt" data-val="{{updatedTime}}">{{updatedAt}}</div>
+        <div class="attribute exportedAt" data-val="{{exportdTime}}">{{exportedAt}}</div>
+      </div>
+    {{/each}}
+  </div>
+</div>
+<style media="screen">
+  html {
+    margin: 25px;
+  }
+  h1 {
+    font-size: 24px;
+    margin-bottom: 20px;
+  }
+  .buttons {
+    margin-bottom: 20px;
+  }
+  .buttons button {
+    padding: 5px 8px;
+  }
+  .courses {
+    display: table;
+    border-collapse: collapse;
+    background: white;
+  }
+  .courses .course {
+    display: table-row;
+  }
+  .courses .course.header {
+    border-bottom: 2px solid #bfd7de;
+  }
+  .courses .course.header .attribute {
+    font-weight: bold;
+  }
+  .courses .course .attribute {
+    display: table-cell;
+    padding: 10px;
+    border: 1px solid #bfd7de;
+  }
+  .courses .course .attribute.centre {
+    text-align: center;
+  }
+</style>
+<script type="text/javascript">
+  $(function() {
+    $('button.select').click(checkAll);
+    $('.export').click(doExport);
+
+    function checkAll(e) {
+      var $t = $(e.currentTarget);
+      var type = $t.attr('data-type');
+      var validators = {
+        all: function() { return true; },
+        none: function() { return false; },
+        unexported: function(u,e) { return !e; },
+        updated: function(u,e) { return u > e; }
+      };
+      $('.course').each(function(i,c) {
+        var $c = $(c);
+        if(!$c.attr('data-id')) {
+          return;
+        }
+        var u = $('.attribute.updatedAt', $c).attr('data-val');
+        var e = $('.attribute.exportedAt', $c).attr('data-val');
+        $('input[type="checkbox"]', $c).prop('checked', validators[type](u,e));
+      });
+    }
+
+    function doExport() {
+      $.post('bulkexport', { courses: getChecked() })
+        .done(function(m) { alert('Success!\n' + m); })
+        .fail(function(m) { alert('Fail!\n' + m); });
+    }
+
+    function getChecked() {
+      var checked = [];
+      $('.course input:checked').map(function(i,c) { checked.push($(c).attr('id')); });
+      return checked;
+    }
+  });
+</script>
