@@ -10,7 +10,14 @@
     <button href="#" class="btn primary-hollow select" data-type="updated">Recently updated</button>
   </div>
   <div class="buttons">
-    <button href="#" class="btn secondary export">Export</button>
+    <button class="btn secondary export">Export</button>
+  </div>
+  <div class="downloads hide">
+    <a href="#" class="download">Download exports</a>
+  </div>
+  <div class="info hide">
+    <h3>Processed <span class="done">0</span>/<span class="total">0</span></h3>
+    <div class="progress"><div class="inner"></div></div>
   </div>
   <div class="courses">
     <div class="course header">
@@ -30,6 +37,9 @@
   </div>
 </div>
 <style media="screen">
+  .hide {
+    display: none;
+  }
   html {
     margin: 25px;
   }
@@ -37,13 +47,33 @@
     font-size: 24px;
     margin-bottom: 20px;
   }
+  h3 {
+    font-size: 16px;
+    margin-bottom: 10px;
+  }
   .buttons {
     margin-bottom: 20px;
   }
   .buttons button {
     padding: 5px 8px;
   }
+  .progress {
+    width: 75%;
+    height: 10px;
+    border: 1px solid #bfd7de;
+    border-radius: 10px;
+    margin-bottom: 25px;
+    overflow: hidden;
+  }
+  .progress .inner {
+    width: 0;
+    height: 100%;
+    background: #00dd95;
+    transition-property: width;
+    transition-duration: 0.5s;
+  }
   .courses {
+    width: 75%;
     display: table;
     border-collapse: collapse;
     background: white;
@@ -93,8 +123,41 @@
 
     function doExport() {
       $.post('bulkexport', { courses: getChecked() })
-        .done(function(m) { alert('Success!\n' + m); })
-        .fail(function(m) { alert('Fail!\n' + m); });
+        .done(function(data) {
+          $('.info').removeClass('hide');
+          updateProgress(data);
+          const i = setInterval(function() {
+            $.get('bulkexport/poll/' + data.id)
+              .done(function(data) {
+                updateProgress(data);
+                if(data.completed + data.errors.length === data.total) {
+                  clearInterval(i);
+                  showDownloads(data.id);
+                }
+              })
+              .fail(function(error) {
+                clearInterval(i);
+                console.log('error:', error);
+              });
+          }, 5000);
+        })
+        .fail(function(m) { console.log(m); });
+    }
+
+    function updateProgress(data) {
+      var done = data.completed + data.errors.length;
+      $('.info .done').text(done);
+      $('.info .total').text(data.total);
+      $('.progress .inner').css('width', ((done/data.total)*100) + '%');
+    }
+
+    function showDownloads(id) {
+      $('.info').addClass('hide');
+      $('.downloads').removeClass('hide');
+      $('.downloads a.download').attr({
+        download: 'Export ' + id,
+        href: 'bulkexport/download/' + id
+      });
     }
 
     function getChecked() {
