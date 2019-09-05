@@ -110,21 +110,11 @@ function bulkExport(req, res, next) {
 }
 
 function sendExports(req, res, next) {
-  console.log('sendExports');
   const data = courseexports.exports[req.params.id];
-  // if(!data) {
-  //   return res.status(404).end();
-  // }
-  // console.log(data);
-  const rootdir = path.join(origin.configuration.tempDir, origin.configuration.getConfig('masterTenantID'), Constants.Folders.Exports, 'Export-2019-09-04T19.56.46.453Z');
-  const filename = 'DO-NOT-EDIT-m190-Step-1.-Define-the-problem.zip';
-  res.sendFile(filename, { root: rootdir }, error => {
-    if(error) {
-      console.log(error);
-      next(error);
-    }
-    console.log('success', rootdir, filename);
-  });
+  if(!data) {
+    return res.status(404).end();
+  }
+  zipExports(data.dir, (error, zipname) => res.sendFile(zipname));
 }
 
 function pollExportProgress(req, res, next) {
@@ -135,9 +125,10 @@ function pollExportProgress(req, res, next) {
   res.json({ id: req.params.id, completed: data.completed, total: data.total, errors: data.errors });
 }
 
-function zipExports(dir) {
-  const output = fs.createWriteStream(`${dir}.zip`);
-  output.on('close', () => { fs.remove(dir); });
+function zipExports(dir, cb) {
+  const zipname = `${dir}.zip`;
+  const output = fs.createWriteStream(zipname);
+  output.on('close', () => cb(null, zipname));
   archive.pipe(output);
   archive.glob('**/*', { cwd: path.join(dir) });
   archive.finalize();
