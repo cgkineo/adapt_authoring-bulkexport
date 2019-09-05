@@ -136,9 +136,7 @@ function zipExports(dir, cb) {
 
 function mapCourseData(results) {
   return results.map(r => {
-    Object.values(courseexports.exports).forEach(e => {
-      if(e.courses.includes(r._id.toString())) r.exportedAt = e.timestamp;
-    });
+    r.exportedAt = courseexports.courses[r._id];
     return {
       _id: r._id,
       title: r.title,
