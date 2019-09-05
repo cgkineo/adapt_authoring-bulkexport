@@ -6,6 +6,7 @@ const fs = require('fs-extra');
 const mongoose = require('mongoose');
 const origin = require('../../lib/application')();
 const path = require('path');
+const permissions = require('../../lib/permissions');
 const server = module.exports = express();
 
 const courseexports = loadMetadata()
@@ -30,14 +31,29 @@ function init() {
     if (error) return console.log(error);
     course = plugin;
   });
+  const r = express.Router();
+  // routes
+  r.use(checkPermissions);
+  r.get('/', renderIndex);
+  r.post('/', bulkExport);
+  r.get('/download/:id', sendExports);
+  r.get('/poll/:id', pollExportProgress);
 
   server.set('views', __dirname);
   server.set('view engine', 'hbs');
-  // routes
-  server.get('/bulkexport', renderIndex);
-  server.post('/bulkexport', bulkExport);
-  server.get('/bulkexport/download/:id', sendExports);
-  server.get('/bulkexport/poll/:id', pollExportProgress);
+  server.use('/bulkexport', r);
+}
+
+function checkPermissions(req, res, next) {
+  if(!req.user) {
+    return res.status(401).send('Unauthorised');
+  }
+  permissions.hasPermission(req.user._id, '*', '*', isAllowed => {
+    if(!isAllowed) {
+      return res.status(403).send('Forbidden');
+    }
+    next();
+  });
 }
 
 function renderIndex(req, res, next) {
