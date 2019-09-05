@@ -127,6 +127,10 @@ function pollExportProgress(req, res, next) {
 
 function zipExports(dir, cb) {
   const zipname = `${dir}.zip`;
+  
+  if(fs.existsSync(zipname)) {
+    return cb(null, zipname);
+  }
   const output = fs.createWriteStream(zipname);
   output.on('close', () => cb(null, zipname));
   archive.pipe(output);
