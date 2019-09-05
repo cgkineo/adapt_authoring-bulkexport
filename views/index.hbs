@@ -31,7 +31,7 @@
         <div class="attribute check centre"><input type="checkbox" id="{{_id}}" name="{{_id}}"></div>
         <div class="attribute title">{{title}}</div>
         <div class="attribute updatedAt" data-val="{{updatedTime}}">{{updatedAt}}</div>
-        <div class="attribute exportedAt" data-val="{{exportdTime}}">{{exportedAt}}</div>
+        <div class="attribute exportedAt" data-val="{{exportedTime}}">{{exportedAt}}</div>
       </div>
     {{/each}}
   </div>
@@ -42,6 +42,7 @@
   }
   html {
     margin: 25px;
+    overflow-y: auto;
   }
   h1 {
     font-size: 24px;
