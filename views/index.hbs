@@ -1,39 +1,45 @@
 <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
 <link rel="stylesheet" href="/css/adapt.css">
-<div class="inner">
-  <h1>Bulk export</h1>
-  <div class="buttons">
-    Select:
-    <button href="#" class="btn primary-hollow select" data-type="all">All</button>
-    <button href="#" class="btn primary-hollow select" data-type="none">None</button>
-    <button href="#" class="btn primary-hollow select" data-type="unexported">Unexported</button>
-    <button href="#" class="btn primary-hollow select" data-type="updated">Recently updated</button>
-  </div>
-  <div class="buttons">
-    <button class="btn secondary export">Export</button>
-  </div>
-  <div class="downloads hide">
-    <a href="#" class="download">Download exports</a>
-  </div>
-  <div class="info hide">
-    <h3>Processed <span class="done">0</span>/<span class="total">0</span></h3>
-    <div class="progress"><div class="inner"></div></div>
-  </div>
-  <div class="courses">
-    <div class="course header">
-      <div class="attribute">Include</div>
-      <div class="attribute">Course title</div>
-      <div class="attribute">Last updated</div>
-      <div class="attribute">Last exported</div>
-    </div>
-    {{#each courses}}
-      <div class="course" data-id="{{_id}}">
-        <div class="attribute check centre"><input type="checkbox" id="{{_id}}" name="{{_id}}"></div>
-        <div class="attribute title">{{title}}</div>
-        <div class="attribute updatedAt" data-val="{{updatedTime}}">{{updatedAt}}</div>
-        <div class="attribute exportedAt" data-val="{{exportedTime}}">{{exportedAt}}</div>
+<div>
+  <div class="location-title">
+    <div class="location-title-inner">
+      <div class="titles">
+        <div class="title">Bulk export</div>
       </div>
-    {{/each}}
+    </div>
+  </div>
+  <div class="inner">
+    <div class="buttons">
+      Select:
+      <button href="#" class="btn primary-hollow select" data-type="all">All</button>
+      <button href="#" class="btn primary-hollow select" data-type="none">None</button>
+      <button href="#" class="btn primary-hollow select" data-type="unexported">Unexported</button>
+      <button href="#" class="btn primary-hollow select" data-type="updated">Recently updated</button>
+    </div>
+    <div class="buttons">
+      <button class="btn secondary export">Export</button>
+      <a class="btn secondary-hollow download hide">Download exports</a>
+    </div>
+    <div class="info hide">
+      <h3>Processed <span class="done">0</span>/<span class="total">0</span></h3>
+      <div class="progress"><div class="inner"></div></div>
+    </div>
+    <div class="courses">
+      <div class="course header">
+        <div class="attribute">Include</div>
+        <div class="attribute">Course title</div>
+        <div class="attribute">Last updated</div>
+        <div class="attribute">Last exported</div>
+      </div>
+      {{#each courses}}
+        <div class="course" data-id="{{_id}}">
+          <div class="attribute check centre"><input type="checkbox" id="{{_id}}" name="{{_id}}"></div>
+          <div class="attribute title">{{title}}</div>
+          <div class="attribute updatedAt" data-val="{{updatedTime}}">{{updatedAt}}</div>
+          <div class="attribute exportedAt" data-val="{{exportedTime}}">{{exportedAt}}</div>
+        </div>
+      {{/each}}
+    </div>
   </div>
 </div>
 <style media="screen">
@@ -41,12 +47,10 @@
     display: none;
   }
   html {
-    margin: 25px;
     overflow-y: auto;
   }
-  h1 {
-    font-size: 24px;
-    margin-bottom: 20px;
+  .inner {
+    margin: 15px;
   }
   h3 {
     font-size: 16px;
@@ -55,8 +59,9 @@
   .buttons {
     margin-bottom: 20px;
   }
-  .buttons button {
+  .buttons .btn {
     padding: 5px 8px;
+    cursor: pointer;
   }
   .progress {
     width: 75%;
@@ -81,6 +86,10 @@
   }
   .courses .course {
     display: table-row;
+    cursor: pointer;
+  }
+  .courses .course:hover {
+    background: #f1f5f7;
   }
   .courses .course.header {
     border-bottom: 2px solid #bfd7de;
@@ -101,6 +110,11 @@
   $(function() {
     $('button.select').click(checkAll);
     $('.export').click(doExport);
+    
+    $('.course').click(e => {
+      const $c = $('input[type="checkbox"]', e.currentTarget);
+      $c.prop('checked', !$c.prop('checked'));
+    });
 
     function checkAll(e) {
       var $t = $(e.currentTarget);
@@ -154,11 +168,9 @@
 
     function showDownloads(id) {
       $('.info').addClass('hide');
-      $('.downloads').removeClass('hide');
-      $('.downloads a.download').attr({
-        download: 'Export ' + id,
-        href: 'bulkexport/download/' + id
-      });
+      $('.btn.download')
+        .removeClass('hide')
+        .attr({ download: `Export ${id}`, href: `bulkexport/download/${id}` });
     }
 
     function getChecked() {
