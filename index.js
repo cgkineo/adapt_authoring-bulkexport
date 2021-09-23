@@ -97,13 +97,20 @@ function bulkExport(req, res, next) {
       if(!results.length) {
         return handleError(new Error(`No course with _id '${courseId}'`));
       }
-      adapt.export(courseId, { outputdir: path.join(exportsRoot, normalisePath(results[0].title)) }, error => {
+      adapt.export(courseId, {}, {}, error => {
         if(error) return handleError(error);
 
-        courseexports.exports[id].completed++;
-        courseexports.courses[courseId] = courseexports.exports[id].timestamp;
-        saveMetadata();
-        cb();
+        const tempExportDir = path.join(configuration.tempDir, configuration.getConfig('masterTenantID'), Constants.Folders.Exports, req.user._id);
+        const finalExportDir = path.join(exportsRoot, normalisePath(results[0].title);
+        
+        fs.move(tempExportDir, finalExportDir, error => {
+          if(error) return handleError(error);
+          
+          courseexports.exports[id].completed++;
+          courseexports.courses[courseId] = courseexports.exports[id].timestamp;
+          saveMetadata();
+          cb();
+        });
       });
     });
   });
