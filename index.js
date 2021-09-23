@@ -101,7 +101,7 @@ function bulkExport(req, res, next) {
         if(error) return handleError(error);
 
         const tempExportDir = path.join(configuration.tempDir, configuration.getConfig('masterTenantID'), Constants.Folders.Exports, req.user._id);
-        const finalExportDir = path.join(exportsRoot, normalisePath(results[0].title);
+        const finalExportDir = path.join(exportsRoot, normalisePath(results[0].title));
         
         fs.move(tempExportDir, finalExportDir, error => {
           if(error) return handleError(error);
