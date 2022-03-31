@@ -9,7 +9,7 @@ const path = require('path');
 const permissions = require('../../lib/permissions');
 const server = module.exports = express();
 
-const courseexports = loadMetadata()
+const courseexports = loadMetadata();
 let adapt, course;
 
 /** @todo should be in the DB **/
@@ -85,8 +85,14 @@ function bulkExport(req, res, next) {
 
   async.eachSeries(req.body.courses, (courseId, cb) => {
     const handleError = (error) => {
+      error = JSON.stringify(error);
       console.log(error);
-      courseexports.exports[id].errors.push({ courseId: courseId, error: error.toString() });
+      courseexports.exports[id].errors.push({ courseId: courseId, error });
+      courseexports.courses[courseId] = { 
+        success: false, 
+        error, 
+        time: courseexports.exports[id].timestamp 
+      };
       saveMetadata();
       cb();
     };
@@ -101,13 +107,13 @@ function bulkExport(req, res, next) {
         if(error) return handleError(error);
 
         const tempExportDir = path.join(origin.configuration.tempDir, origin.configuration.getConfig('masterTenantID'), Constants.Folders.Exports, req.user._id.toString() + '.zip');
-        const finalExportDir = path.join(exportsRoot, normalisePath(results[0].title));
+        const finalExportDir = path.join(exportsRoot, normalisePath(`${courseId}-${results[0].title}.zip`));
         
         fs.move(tempExportDir, finalExportDir, error => {
           if(error) return handleError(error);
           
           courseexports.exports[id].completed++;
-          courseexports.courses[courseId] = courseexports.exports[id].timestamp;
+          courseexports.courses[courseId] = { success: true, time: courseexports.exports[id].timestamp };
           saveMetadata();
           cb();
         });
@@ -147,26 +153,40 @@ function zipExports(dir, cb) {
 
 function mapCourseData(results) {
   return results.map(r => {
-    r.exportedAt = courseexports.courses[r._id];
+    const e = courseexports.courses[r._id] || {};
+    r.exportedAt = e.time;
+    r.error = e.error;
     return {
       _id: r._id,
       title: r.title,
       updatedAt: toDateString(r.updatedAt),
       updatedTime: toTimeString(r.updatedAt),
       exportedAt: toDateString(r.exportedAt),
-      exportedTime: toTimeString(r.exportedAt)
+      exportedTime: toTimeString(r.exportedAt),
+      status: getStatus(r),
+      error: r.error
     };
   });
 }
 
 function toDateString(dateString) {
   if(!dateString) return '';
-  return new Date(dateString).toDateString();
+  const d = new Date(dateString);
+  return `${d.toDateString()} ${d.toTimeString().replace(/ \(.+\)/, '')}`;
 }
 
 function toTimeString(dateString) {
   if(!dateString) return '';
   return new Date(dateString).getTime();
+}
+
+function getStatus(c) {
+  if(!c.exportedAt) return '';
+  const updated = toTimeString(c.updatedAt);
+  const exported = toTimeString(c.exportedAt);
+  if(c.error) return 'fail';
+  if(updated < exported) return 'ok';
+  if(updated >= exported) return 'warn';
 }
 
 function normalisePath(p) {
