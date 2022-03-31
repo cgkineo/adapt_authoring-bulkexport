@@ -30,13 +30,15 @@
         <div class="attribute">Course title</div>
         <div class="attribute">Last updated</div>
         <div class="attribute">Last exported</div>
+        <div class="attribute">Debug</div>
       </div>
       {{#each courses}}
-        <div class="course" data-id="{{_id}}">
+        <div class="course {{status}}" data-id="{{_id}}">
           <div class="attribute check centre"><input type="checkbox" id="{{_id}}" name="{{_id}}"></div>
           <div class="attribute title">{{title}}</div>
           <div class="attribute updatedAt" data-val="{{updatedTime}}">{{updatedAt}}</div>
           <div class="attribute exportedAt" data-val="{{exportedTime}}">{{exportedAt}}</div>
+          <div class="attribute errormsg">{{error}}</div>
         </div>
       {{/each}}
     </div>
@@ -64,7 +66,6 @@
     cursor: pointer;
   }
   .progress {
-    width: 75%;
     height: 10px;
     border: 1px solid #bfd7de;
     border-radius: 10px;
@@ -79,7 +80,6 @@
     transition-duration: 0.5s;
   }
   .courses {
-    width: 75%;
     display: table;
     border-collapse: collapse;
     background: white;
@@ -87,6 +87,15 @@
   .courses .course {
     display: table-row;
     cursor: pointer;
+  }
+  .courses .course.ok {
+    color: #209720;
+  }
+  .courses .course.warn {
+    color: #e39601
+  }
+  .courses .course.fail {
+    color: #e30101;
   }
   .courses .course:hover {
     background: #f1f5f7;
@@ -170,7 +179,7 @@
       $('.info').addClass('hide');
       $('.btn.download')
         .removeClass('hide')
-        .attr({ download: `Export ${id}`, href: `bulkexport/download/${id}` });
+        .attr({ download: `Export ${id}.zip`, href: `bulkexport/download/${id}` });
     }
 
     function getChecked() {
